@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import SwiftUICore
 
 @Model
 final class Item {
@@ -14,5 +15,16 @@ final class Item {
     
     init(timestamp: Date) {
         self.timestamp = timestamp
+    }
+}
+
+@Model
+final class DailyNote {
+//    var frame: Color
+//    var color: Color
+    var icon: String
+    
+    init() {
+        icon = ""
     }
 }
