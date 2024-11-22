@@ -36,6 +36,9 @@ final class DailyNote: ObservableObject {
     func setIcon(_ icon: String) {
         self.icon = icon
     }
+    func addItem(_ item: Note) {
+        self.item.append(item)
+    }
 }
 
 struct Note: Identifiable, Codable {
