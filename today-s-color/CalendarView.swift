@@ -40,16 +40,20 @@ struct Today {
         let start = x >= 0 ? x + 1 : x + 8
         for i in 1...42 {
             if i < start {
-                dayCalendar.append(Days(day: 0))
+                dayCalendar.append(Days())
             }
             else if i < start + daysCount {
-                dayCalendar.append(Days(day: i - start + 1))
+                dayCalendar.append(Days(year: self.year, month: self.month, day: i - start + 1))
             }
             else {
-                dayCalendar.append(Days(day: 0))
+                dayCalendar.append(Days())
             }
         }
         return dayCalendar
+    }
+    
+    func getDayID() -> Int {
+        return self.year * 10000 + self.month * 100 + self.day
     }
 }
 
@@ -61,7 +65,19 @@ extension Calendar {
 
 struct Days: Identifiable {
     let id = UUID()
+    let year: Int
+    let month: Int
     let day: Int
+    
+    init(year: Int = 0, month: Int = 0, day: Int = 0) {
+        self.year = year
+        self.month = month
+        self.day = day
+    }
+    
+    func getDayID() -> Int {
+        return self.year * 10000 + self.month * 100 + self.day
+    }
 }
 
 let weekdays = Calendar.current.shortWeekdaySymbols
@@ -124,6 +140,11 @@ struct CalendarView: View {
                         ForEach(today.getMonthCalendar(offset: monthOffset)) { day in
                             if day.day != 0 {
                                 @State var dayString = String(getTargetMonth()) + " / " + String(day.day)
+//                                if let dailyNote = dailyNotes.first(where: {
+//                                    $0.id == day.getDayID()
+//                                }) {
+//                                    
+//                                }
                                 NavigationLink {
                                     TodayView(day: $dayString)
                                 } label: {
@@ -166,4 +187,5 @@ struct CalendarView: View {
 
 #Preview {
     CalendarView()
+        .modelContainer(for: DailyNote.self, inMemory: true)
 }

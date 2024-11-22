@@ -26,9 +26,8 @@ struct TodayView: View {
                                ColorData(red: 232, green: 41, blue: 189),
                                ColorData(red: 128, green: 128, blue: 128)]
     var icons = ["🙂", "😊", "🤪", "😥", "😵‍💫", "😡"]
-    @State var notes = [Note]()
     @State var textfield: String = ""
-    @State var todayNote = DailyNote(frame: ColorData(red: 255, green: 255, blue: 255, opacity: 0), color: ColorData(red: 255, green: 255, blue: 255), icon: "")
+    @State var todayNote = DailyNote(frame: ColorData(red: 255, green: 255, blue: 255, opacity: 0), color: ColorData(red: 255, green: 255, blue: 255, opacity: 0), icon: "")
     
     var body: some View {
         ZStack {
@@ -110,9 +109,19 @@ struct TodayView: View {
                                 todayNote.setColor(item)
                                 store()
                             }) {
-                                Circle()
-                                    .foregroundColor(item.getColor())
-                                    .frame(height: 32)
+                                ZStack {
+//                                    if dailyNotes.count > 0 {
+//                                        let index = dailyNotes.first(where: {
+//                                            $0.id == today.getDayID()
+//                                        })
+//                                    }
+//                                    if item == todayNote.color {
+//                                        
+//                                    }
+                                    Circle()
+                                        .foregroundColor(item.getColor())
+                                        .frame(height: 32)
+                                }
                             }
                             Spacer()
                         }
@@ -152,6 +161,7 @@ struct TodayView: View {
                             Spacer()
                             Button(action: {
                                 todayNote.setIcon(icon)
+                                store()
                             }) {
                                 Text(icon)
                             }
@@ -168,7 +178,7 @@ struct TodayView: View {
                     Spacer()
                         .frame(width: 16)
                     ScrollView {
-                        ForEach(notes) { note in
+                        ForEach(todayNote.item) { note in
                             if note.type == "text" {
                                 Text("\(note.value)")
                                     .padding(.all, 1.0)
@@ -190,6 +200,15 @@ struct TodayView: View {
                         .frame(width: 16)
                 }
                 Spacer()
+                HStack { // 確認用
+                    Rectangle()
+                        .frame(width: 16, height: 16)
+                        .foregroundColor(todayNote.frame.getColor())
+                    Circle()
+                        .frame(width: 16, height: 16)
+                        .foregroundColor(todayNote.color.getColor())
+                    Text("\(todayNote.icon)")
+                }
                 HStack {
                     Spacer()
                         .frame(width: 16)
@@ -200,7 +219,9 @@ struct TodayView: View {
                                 .stroke(Color.gray, lineWidth: 1)
                         )
                     Button(action: {
-                        notes.append(Note(type: "text", value: textfield))
+                        todayNote.addItem(Note(type: "text", value: textfield))
+                        textfield = ""
+                        store()
                     }) {
                         Image(systemName: "paperplane.fill")
                     }
