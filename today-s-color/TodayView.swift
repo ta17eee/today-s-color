@@ -4,28 +4,41 @@
 //
 //  Created by 高野　泰生 on 2024/11/17.
 //
-
+import SwiftData
 import SwiftUI
 
 struct TodayView: View {
+    @Query private var dailyNotes: [DailyNote]
+    @Environment(\.modelContext) private var context
+    
+    @Binding var day: String
+    
     var today = Today()
-    let frame: [Color] = [Color(red: 196 / 255, green: 112 / 255, blue: 34 / 255),
-                                Color(red: 192 / 255, green: 192 / 255, blue: 192 / 255),
-                                Color(red: 1, green: 215 / 255, blue: 0)]
-    let colors: [Color] = [.red, .green, .blue, .orange, .yellow, .purple, .gray]
-    let icons = ["🙂", "😊", "🤪", "😥", "😵‍💫", "😡"]
+    let frame: [ColorData] = [ColorData(red: 196, green: 112, blue: 34),
+                              ColorData(red: 192, green: 192, blue: 192),
+                              ColorData(red: 255, green: 215, blue: 0)]
+//    var colors: [Color] = [.red, .green, .blue, .orange, .yellow, .purple, .gray]
+    var colors: [ColorData] = [ColorData(red: 232, green: 57, blue: 41),
+                               ColorData(red: 255, green: 241, blue: 0),
+                               ColorData(red: 80, green: 232, blue: 41),
+                               ColorData(red: 41, green: 134, blue: 232),
+                               ColorData(red: 112, green: 41, blue: 232),
+                               ColorData(red: 232, green: 41, blue: 189),
+                               ColorData(red: 128, green: 128, blue: 128)]
+    var icons = ["🙂", "😊", "🤪", "😥", "😵‍💫", "😡"]
+    @State var notes = [Note]()
+    @State var textfield: String = ""
+    @State var todayNote = DailyNote(frame: ColorData(red: 255, green: 255, blue: 255, opacity: 0), color: ColorData(red: 255, green: 255, blue: 255), icon: "")
     
     var body: some View {
         ZStack {
             Color(red: 254 / 255, green: 204 / 255, blue: 102 / 255, opacity: 0.2)
                 .ignoresSafeArea()
             VStack {
-                Spacer()
-                    .frame(height: 16)
-                Text("\(today.month) / \(today.day)")
+                Text(day)
                     .font(.largeTitle)
                 Spacer()
-                    .frame(height: 32)
+                    .frame(height: 16)
                 HStack {
                     Spacer()
                         .frame(width: 16)
@@ -48,12 +61,13 @@ struct TodayView: View {
                     HStack {
                         Spacer()
                             .frame(width: 32)
-                        ForEach(frame, id: \.self) { item in
+                        ForEach(frame) { item in
                             Spacer()
                             Button(action: {
-                                
+                                todayNote.setFrame(item)
+                                store()
                             }) {
-                                item
+                                item.getColor()
                                     .frame(width: 64, height: 32)
                             }
                             Spacer()
@@ -63,13 +77,17 @@ struct TodayView: View {
                     }
                 }
                 Spacer()
-                    .frame(height: 16)
+                    .frame(height: 8)
                 HStack {
                     Spacer()
                         .frame(width: 16)
                     Text("今日の色")
                     Spacer()
-                    
+                    Button(action: {
+                        
+                    }) {
+                        Text("編集")
+                    }
                     Spacer()
                         .frame(width: 16)
                 }
@@ -86,13 +104,14 @@ struct TodayView: View {
                     HStack {
                         Spacer()
                             .frame(width: 32)
-                        ForEach(colors, id: \.self) { item in
+                        ForEach(colors) { item in
                             Spacer()
                             Button(action: {
-                                
+                                todayNote.setColor(item)
+                                store()
                             }) {
                                 Circle()
-                                    .foregroundColor(item)
+                                    .foregroundColor(item.getColor())
                                     .frame(height: 32)
                             }
                             Spacer()
@@ -102,13 +121,17 @@ struct TodayView: View {
                     }
                 }
                 Spacer()
-                    .frame(height: 16)
+                    .frame(height: 8)
                 HStack {
                     Spacer()
                         .frame(width: 16)
                     Text("今日の気分")
                     Spacer()
-                    
+                    Button(action: {
+                        
+                    }) {
+                        Text("編集")
+                    }
                     Spacer()
                         .frame(width: 16)
                 }
@@ -128,7 +151,7 @@ struct TodayView: View {
                         ForEach(icons, id: \.self) { icon in
                             Spacer()
                             Button(action: {
-                                
+                                todayNote.setIcon(icon)
                             }) {
                                 Text(icon)
                             }
@@ -139,15 +162,64 @@ struct TodayView: View {
                     }
                 }
                 Spacer()
-                    .frame(height: 16)
+                    .frame(height: 8)
                 Text("できごと")
-                
+                HStack {
+                    Spacer()
+                        .frame(width: 16)
+                    ScrollView {
+                        ForEach(notes) { note in
+                            if note.type == "text" {
+                                Text("\(note.value)")
+                                    .padding(.all, 1.0)
+                                    .background(Color(red: 0.9, green: 0.9, blue: 0.9, opacity: 0.5))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 1)
+                                            .stroke(Color.gray, lineWidth: 1)
+                                    )
+                            }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 2)
+                            .stroke(Color.gray, lineWidth: 2)
+                        )
+                    .background(.white)
+                    Spacer()
+                        .frame(width: 16)
+                }
                 Spacer()
+                HStack {
+                    Spacer()
+                        .frame(width: 16)
+                    TextField("今日あったこと", text: $textfield)
+                        .background(.white)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 2)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
+                    Button(action: {
+                        notes.append(Note(type: "text", value: textfield))
+                    }) {
+                        Image(systemName: "paperplane.fill")
+                    }
+                    Spacer()
+                        .frame(width: 16)
+                }
+                Spacer()
+                    .frame(height: 16)
             }
         }
+    }
+    
+    private func store() {
+        context.insert(todayNote)
     }
 }
 
 #Preview {
-    TodayView()
+    @Previewable @State var string = "MM / dd"
+    TodayView(day: $string)
+        .modelContainer(for: DailyNote.self, inMemory: true)
 }
